@@ -53,8 +53,31 @@ def menu():
 	choice = input('Enter your choice [0-10] : ')
 	choice = int(choice)
 	if choice == 1:
-		print()
-		#Set Paths
+		print("Setting paths... Leave empty to keep present path.")
+		
+		config_file = configparser.ConfigParser()
+		
+		str = input("Enter path to steamcmd directory (exemple : /home/user/steamcmd) :")
+		if not str:
+			print("Keeping present value.")
+		else:
+			config_file.set('PATHS','steamcmd', str)
+
+		str = input("Enter path to arma 3 server directory (exemple : /home/user/arma3) :")
+		if not str:
+			print("Keeping present value.")
+		else:
+			config_file.set('PATHS','arma3server', str)
+
+		str = input("Enter path where you want the mods to be installed (exemple : /home/user/arma3/mods) :")
+		if not str:
+			print("Keeping present value.")
+		else:
+			config_file.set('PATHS','mods', str)
+
+		config_file.write(open('manager.ini', 'w+'))
+
+		menu()
 	elif choice == 2:
 		print()
 		#Set Steam Credentials
@@ -98,10 +121,10 @@ print("Isardy's Arma 3 Dedicated Server Mod Manager.")
 print()
 print("Reading config file...")
 
-config_file = ("./modmanager.ini")
+config_file = ("manager.ini")
 if not os.path.isfile(config_file):
 
-	print("Config file 'modmanager.ini' not found. Creating configuration file...")
+	print("Config file 'manager.ini' not found. Creating configuration file...")
 
 	config_file = configparser.ConfigParser()
 
@@ -121,8 +144,7 @@ if not os.path.isfile(config_file):
 
 	config_file.write(open('manager.ini', 'w+'))
 
-	print("Blank configuration file created.")
-	print("Remember that you need to setup the Paths and Credentials using the following menu.")
+	print("Configuration file 'manager.ini' has been generated.")
 	print()
 	menu()
 
