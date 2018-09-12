@@ -56,6 +56,7 @@ def menu():
 		print("Setting paths... Leave empty to keep present path.")
 		
 		config_file = configparser.ConfigParser()
+		config_file.read("manager.ini")
 		
 		str = input("Enter path to steamcmd directory (exemple : /home/user/steamcmd) :")
 		if not str:
@@ -76,11 +77,28 @@ def menu():
 			config_file.set('PATHS','mods', str)
 
 		config_file.write(open('manager.ini', 'w+'))
-
 		menu()
+
 	elif choice == 2:
-		print()
-		#Set Steam Credentials
+		print("Setting Steam credentials... Leave empty to keep present credentials.")
+
+		config_file = configparser.ConfigParser()
+		config_file.read("manager.ini")
+
+		str = input("Enter Steam username :")
+		if not str:
+			print("Keeping present value.")
+		else:
+			config_file.set('STEAM_CREDENTIALS', 'username', str)
+		
+		str = input("Enter Steam password :")
+		if not str:
+			print("Keeping present value.")
+		else:
+			config_file.set('STEAM_CREDENTIALS', 'password', str)
+		
+		config_file.write(open('manager.ini', 'w+'))
+		menu()
 	elif choice == 3:
 		print()
 		#Start Server
