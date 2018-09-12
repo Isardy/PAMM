@@ -133,9 +133,9 @@ def menu():
 		setconfig('arma3server')
 		setconfig('mods')
 		menu()
-
 	elif choice == 2:
-		
+		setconfig('username')
+		setconfig('password')
 		menu()
 	elif choice == 3:
 		print()
