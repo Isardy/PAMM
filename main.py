@@ -3,14 +3,16 @@
 #Author : Isardy
 #
 #This program aims to make mod management for Arma 3 Dedicated Servers easier.
-#It will replace the present bash script suite and be more practical and Windows compatible.
+#It will replace the present bash script suite and be more practical (and maybe  Windows compatible at some point).
 
 ##########################################################################
 
 import os
 import configparser
+import requests
+from lxml import html
 
-##########################################################################
+##########################Server Management###############################
 
 
 def servermanagement( str ):
@@ -24,21 +26,23 @@ def servermanagement( str ):
 	else:
 		print("Server Management error")
 
-##########################################################################
+##########################Config Management###############################
 
 def generateconfigfile():
 	print("Generating config file...")
 
 	config_file = ("manager.ini")
-	config_file = configparser.ConfigParser()
+	config_file = configparser.ConfigParser(delimiters=':')
 
 	config_file.add_section('PATHS')
 	config_file.add_section('STEAM_CREDENTIALS')
-	str = input("Enter path to steamcmd directory (exemple : /home/user/steamcmd) :")
+	config_file.add_section('MODS')
+
+	str = input("Enter path to steamcmd directory (exemple : \033[1;41m/home/user/steamcmd\033[1;m) :")
 	config_file.set('PATHS','steamcmd', str)
-	str = input("Enter path to arma 3 server directory (exemple : /home/user/arma3) :")
+	str = input("Enter path to arma 3 server directory (exemple : \033[1;41m/home/user/arma3\033[1;m) :")
 	config_file.set('PATHS','arma3server', str)
-	str = input("Enter path where you want the mods to be installed (exemple : /home/user/arma3/mods) :")
+	str = input("Enter path where you want the mods to be installed (exemple : \033[1;41m/home/user/arma3/mods\033[1;m) :")
 	config_file.set('PATHS','mods', str)
 
 	str = input("Enter your steam user name :")
@@ -46,13 +50,14 @@ def generateconfigfile():
 	str = input("Enter your steam password :")
 	config_file.set('STEAM_CREDENTIALS','password', str)
 
+
 	config_file.write(open('manager.ini', 'w+'))
 
 	print("Configuration file 'manager.ini' has been created.")
 
 def checkconfigfile():
 	
-	config_file = configparser.ConfigParser()
+	config_file = configparser.ConfigParser(delimiters=':')
 	config_file = ("manager.ini")
 
 	if not os.path.isfile(config_file):
@@ -62,31 +67,31 @@ def checkconfigfile():
 		print("manager.ini found.")
 
 def setconfig( str ):
-	config_file = configparser.ConfigParser()
+	config_file = configparser.ConfigParser(delimiters=':')
 	config_file.read("manager.ini")
 
 	if str == "steamcmd" or str == "arma3server" or str == "mods" :
 		value = config_file.get('PATHS', str)
 		print("Setting new path for ", str, " directory.")
-		print("Path presently set to : ", value)
+		print("Path presently set to : \033[1;41m", value, "\033[1;m")
 		input_prompt = "New path to " + str + " (leave empty to keep present path) :"
 		new = input(input_prompt)
 		if not str:
 			print("Keeping present value.")
 		else:
 			config_file.set('PATHS', str, new)
-			print("New ", str, " path set to ", new)
+			print("New ", str, " path set to \033[1;41m", new, "\033[1;m")
 
 	elif str == "username":
 		value = config_file.get('STEAM_CREDENTIALS', 'username')
 		print("Setting new Steam user name.")
-		print("User name presently set to : ", value)
+		print("User name presently set to : \033[1;41m", value, "\033[1;m")
 		str = input("New Steam user name (leave empty to keep present path) :")
 		if not str:
 			print("Keeping present value.")
 		else:
 			config_file.set('STEAM_CREDENTIALS','username', str)
-			print("New Steam username set to ", str)
+			print("New Steam username set to \033[1;41m", str, "\033[1;m")
 
 	elif str == "password":
 		value = config_file.get('STEAM_CREDENTIALS', 'password')
@@ -100,8 +105,57 @@ def setconfig( str ):
 
 	config_file.write(open('manager.ini', 'w'))
 
+##############################Mods Management#############################
 
-##########################################################################
+
+def getmodinfo( modid ):
+	print("Getting mod info from the Workshop.")
+	url = "https://steamcommunity.com/sharedfiles/filedetails/?id=" + str(modid)
+	page = requests.get(url)
+	tree = html.fromstring(page.content)
+	#print(page)
+	last_update = tree.xpath('//div[@class="detailsStatRight"]/text()')
+	title = tree.xpath('//div[@class="workshopItemTitle"]/text()')
+	modinfo = [modid, title[0], last_update[2]]
+	return modinfo
+
+
+
+def mods( action, modid=0 ):
+	config_file = configparser.ConfigParser(delimiters=':')
+	config_file.read("manager.ini")
+	if action == "list":
+		print("Liste des mods :")
+		print(config_file.items('MODS'))
+		input()
+		#TODO terminaltables
+	elif action == "add":
+		if modid == 0:
+			print("Invalid mod id.")
+		else:
+			mod = getmodinfo(modid)
+			id = str(mod[0])
+			title = str(mod[1])
+			date = str(mod[2])
+			value = title + ',' + date 
+			config_file.set('MODS', id, value )
+			config_file.write(open('manager.ini', 'w'))
+	elif action == "remove":
+		if modid == 0:
+			print("Invalid mod id.")
+		else:
+			config_file.remove_option('MODS', str(modid))
+			config_file.write(open('manager.ini', 'w'))
+
+def updatemods():
+	print("Update")
+
+
+
+
+
+
+##############################Main Menu###################################
 
 def menu():
 
@@ -132,11 +186,9 @@ def menu():
 		setconfig('steamcmd')
 		setconfig('arma3server')
 		setconfig('mods')
-		menu()
 	elif choice == 2:
 		setconfig('username')
 		setconfig('password')
-		menu()
 	elif choice == 3:
 		print()
 		#Start Server
@@ -148,14 +200,13 @@ def menu():
 		#Update Server
 		servermanagement( "update" )
 	elif choice == 6:
-		print()
+		mods('list')
 		#List Mods
 	elif choice == 7:
-		print()
+		mods( 'add',1493291920 )
 		#Add Mods
 	elif choice == 8:
-		print()
-		#Remove Mods
+		mods('remove',1493291920 )
 	elif choice == 9:
 		print()
 		#Check Mods for Update
@@ -166,7 +217,7 @@ def menu():
 		return
 	else:
 		print("Invalid input. Try again")
-		menu()
+	menu()
 
 
 
