@@ -13,20 +13,41 @@ import requests
 from lxml import html
 
 ##########################Server Management###############################
+#
+#	servermanagement(action)
+#		arguments : (str) action : 'stop', 'start' or 'update'
+#		function:
+#			Starts, stops or updates the Arma 3 server
+#		return : None
+#
+##########################################################################
 
-
-def servermanagement( str ):
-	if str == "stop":
+def servermanagement( action ):
+	if action == "stop":
 		print("stop server")
 		menu()
-	elif str == "start":
+	elif action == "start":
 		print("start server")
-	elif str == "update":
+	elif action == "update":
 		print("update server")
 	else:
 		print("Server Management error")
 
 ##########################Config Management###############################
+#
+#	generateconfigfile()
+#		arguments : None
+#		function :
+#			Generates a config file while prompting the user for each option 
+#		return : None
+#
+#	checkconfigfile()
+#		arguments : None
+#		function :
+#			Checks if the config file exists and calls generateconfigfile if not
+#		return : None
+#
+##########################################################################
 
 def generateconfigfile():
 	print("Generating config file...")
@@ -146,6 +167,14 @@ def mods( action, modid=0 ):
 		else:
 			config_file.remove_option('MODS', str(modid))
 			config_file.write(open('manager.ini', 'w'))
+
+def checkmodstatus( modid ):
+	config_file = configparser.ConfigParser(delimiters=':')
+	config_file.read("manager.ini")
+	modid = str(modid)
+	modinfo = config_file.get('MODS', modid)
+
+
 
 def updatemods():
 	print("Update")
