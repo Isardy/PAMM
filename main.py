@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #Isardy's Arma 3 Dedicated Server Mod Manager
 #Author : Isardy
 #
@@ -11,6 +11,9 @@ import os
 import configparser
 import requests
 from lxml import html
+import subprocess
+import signal
+
 
 ##########################Server Management###############################
 #
@@ -24,14 +27,36 @@ from lxml import html
 
 def servermanagement( action ):
 	if action == "stop":
-		print("stop server")
-		menu()
+		process = "arma3server"
+		process = subprocess.Popen(["pgrep", process], stdout=suprocess.PIPE)
+		for pid in process.stdout:
+			os.kill(int(pid), signal.SIGTERM)
+		print("Server stopped.")
 	elif action == "start":
-		print("start server")
+		config_file = configparser.ConfigParser(delimiters=':')
+		config_file.read("manager.ini")
+		serverpath = config_file.get('PATHS', 'arma3server')
+		modsdir = config_file.get('PATHS', 'mods')
+		modlist = mods('quietlist')
+		#subprocess.call('/home/steam/arma/arma3server', shell=True)
+		modstring = ''
+		for mod in modlist:
+			modstring = modstring + modsdir + '/' + mod + ','
+		modstring = modstring[:-1]
+		#print(modstring)
+
+		#TODO custom config file
+		startstring = serverpath + 'arma3server -config=server.cfg -mod=' + modstring
+
+		print(startstring)
+
+
+
 	elif action == "update":
 		print("update server")
-	else:
-		print("Server Management error")
+	elif action == "status":
+		print("server status")
+
 
 ##########################Config Management###############################
 #
@@ -45,6 +70,12 @@ def servermanagement( action ):
 #		arguments : None
 #		function :
 #			Checks if the config file exists and calls generateconfigfile if not
+#		return : None
+#
+#	setconfig(option)
+#		arguments : (str) option : steamcmd, arma3server, mods, username, password
+#		function :
+#			Prompts user for the specified value to best set in manager.ini
 #		return : None
 #
 ##########################################################################
@@ -87,46 +118,54 @@ def checkconfigfile():
 	else:
 		print("manager.ini found.")
 
-def setconfig( str ):
+def setconfig( option ):
 	config_file = configparser.ConfigParser(delimiters=':')
 	config_file.read("manager.ini")
 
-	if str == "steamcmd" or str == "arma3server" or str == "mods" :
-		value = config_file.get('PATHS', str)
-		print("Setting new path for ", str, " directory.")
+	if option == "steamcmd" or option == "arma3server" or option == "mods" :
+		value = config_file.get('PATHS', option)
+		print("Setting new path for ", option, " directory.")
 		print("Path presently set to : \033[1;41m", value, "\033[1;m")
-		input_prompt = "New path to " + str + " (leave empty to keep present path) :"
+		input_prompt = "New path to " + option + " (leave empty to keep present path) :"
 		new = input(input_prompt)
-		if not str:
+		if not option:
 			print("Keeping present value.")
 		else:
-			config_file.set('PATHS', str, new)
-			print("New ", str, " path set to \033[1;41m", new, "\033[1;m")
+			config_file.set('PATHS', option, new)
+			print("New ", option, " path set to \033[1;41m", new, "\033[1;m")
 
-	elif str == "username":
+	elif option == "username":
 		value = config_file.get('STEAM_CREDENTIALS', 'username')
 		print("Setting new Steam user name.")
 		print("User name presently set to : \033[1;41m", value, "\033[1;m")
-		str = input("New Steam user name (leave empty to keep present path) :")
-		if not str:
+		option = input("New Steam user name (leave empty to keep present path) :")
+		if not option:
 			print("Keeping present value.")
 		else:
-			config_file.set('STEAM_CREDENTIALS','username', str)
-			print("New Steam username set to \033[1;41m", str, "\033[1;m")
+			config_file.set('STEAM_CREDENTIALS','username', option)
+			print("New Steam username set to \033[1;41m", option, "\033[1;m")
 
-	elif str == "password":
+	elif option == "password":
 		value = config_file.get('STEAM_CREDENTIALS', 'password')
 		print("Setting new Steam password.")
-		str = input("New Steam password (leave empty to keep present password) :")
-		if not str:
+		option = input("New Steam password (leave empty to keep present password) :")
+		if not option:
 			print("Keeping present value.")
 		else:
-			config_file.set('STEAM_CREDENTIALS','password', str)
+			config_file.set('STEAM_CREDENTIALS','password', option)
 			print("New Steam password set.")
 
 	config_file.write(open('manager.ini', 'w'))
 
 ##############################Mods Management#############################
+#
+#	getmodinfo(modid)
+#	arguments : (int) modid
+#	function :
+#		Retrieves information about the specified mod from the Steam Workshop
+#	returns : ( list ) modinfo [ <mod id>, <mod title>, <last update date>]
+#
+##########################################################################
 
 
 def getmodinfo( modid ):
@@ -134,13 +173,12 @@ def getmodinfo( modid ):
 	url = "https://steamcommunity.com/sharedfiles/filedetails/?id=" + str(modid)
 	page = requests.get(url)
 	tree = html.fromstring(page.content)
+	#TODO : handle invalid ID
 	#print(page)
 	last_update = tree.xpath('//div[@class="detailsStatRight"]/text()')
 	title = tree.xpath('//div[@class="workshopItemTitle"]/text()')
 	modinfo = [modid, title[0], last_update[2]]
 	return modinfo
-
-
 
 def mods( action, modid=0 ):
 	config_file = configparser.ConfigParser(delimiters=':')
@@ -148,25 +186,39 @@ def mods( action, modid=0 ):
 	if action == "list":
 		print("Liste des mods :")
 		print(config_file.items('MODS'))
-		input()
+		input("Press 'Enter' to go back to the Menu.")
 		#TODO terminaltables
+	elif action == "quietlist":
+		return config_file.options('MODS')
 	elif action == "add":
-		if modid == 0:
-			print("Invalid mod id.")
+		modid = input("Enter mod Workshop id :")
+		mod = getmodinfo(modid)
+		id = str(mod[0])
+		title = str(mod[1])
+		date = str(mod[2])
+		value = title + ',' + date 
+		config_file.set('MODS', id, value )
+		config_file.write(open('manager.ini', 'w'))
+		more = input("Do you want to add more mods [yes/no] ?")
+		while more not in [ 'yes', 'Yes', 'no', 'No', 'y', 'n', 'Y', 'N']:
+			print("Invalid answer.")
+			more = input("Do you want to add more mods [yes/no] ?")
+		if more in ['yes', 'Yes', 'y']:
+			mods( 'add' )
 		else:
-			mod = getmodinfo(modid)
-			id = str(mod[0])
-			title = str(mod[1])
-			date = str(mod[2])
-			value = title + ',' + date 
-			config_file.set('MODS', id, value )
-			config_file.write(open('manager.ini', 'w'))
+			return
 	elif action == "remove":
-		if modid == 0:
-			print("Invalid mod id.")
+		modid = input("Enter mod Workshop id :")
+		config_file.remove_option('MODS', str(modid))
+		config_file.write(open('manager.ini', 'w'))
+		more = input("Do you want to remove more mods [yes/no] ?")
+		while more not in [ 'yes', 'Yes', 'no', 'No', 'y', 'n', 'Y', 'N']:
+			print("Invalid answer.")
+			more = input("Do you want to remove more mods [yes/no] ?")
+		if more in ['yes', 'Yes', 'y']:
+			mods( 'remove' )
 		else:
-			config_file.remove_option('MODS', str(modid))
-			config_file.write(open('manager.ini', 'w'))
+			return
 
 def checkmodstatus( modid ):
 	config_file = configparser.ConfigParser(delimiters=':')
@@ -232,10 +284,10 @@ def menu():
 		mods('list')
 		#List Mods
 	elif choice == 7:
-		mods( 'add',1493291920 )
+		mods( 'add' )
 		#Add Mods
 	elif choice == 8:
-		mods('remove',1493291920 )
+		mods('remove' )
 	elif choice == 9:
 		print()
 		#Check Mods for Update
