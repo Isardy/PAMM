@@ -41,7 +41,7 @@ def servermanagement( action ):
 		#subprocess.call('/home/steam/arma/arma3server', shell=True)
 		modstring = ''
 		for mod in modlist:
-			modstring = modstring + modsdir + '/' + mod + ','
+			modstring = modstring + modsdir + '/' + mod + ';'
 		modstring = modstring[:-1]
 		#print(modstring)
 
@@ -94,7 +94,7 @@ def generateconfigfile():
 	config_file.set('PATHS','steamcmd', str)
 	str = input("Enter path to arma 3 server directory (exemple : \033[1;41m/home/user/arma3\033[1;m) :")
 	config_file.set('PATHS','arma3server', str)
-	str = input("Enter path where you want the mods to be installed (exemple : \033[1;41m/home/user/arma3/mods\033[1;m) :")
+	str = input("Enter path, relative to the main Arma 3 directory, where you want the mods to be installed (exemple : \033[1;41mmods\033[1;m) :")
 	config_file.set('PATHS','mods', str)
 
 	str = input("Enter your steam user name :")
