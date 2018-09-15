@@ -41,21 +41,30 @@ def servermanagement( action ):
 		#subprocess.call('/home/steam/arma/arma3server', shell=True)
 		modstring = ''
 		for mod in modlist:
-			modstring = modstring + modsdir + '/' + mod + ';'
+			modstring = modstring + modsdir + '/' + mod + ','
 		modstring = modstring[:-1]
 		#print(modstring)
-
 		#TODO custom config file
 		startstring = serverpath + '/' + 'arma3server -config=server.cfg -mod=' + modstring
-		subprocess.call(startstring, shell=True)
-		#print(startstring)
-
-
-
+		#subprocess.call(startstring, shell=True)
+		print(startstring)
 	elif action == "update":
-		print("update server")
+		print("TODO : update server")
+		config_file = configparser.ConfigParser(delimiters=':')
+		config_file.read("manager.ini")
+		steam = config_file.get('PATHS', 'steamcmd')
+		arma = config_file.get('PATHS', 'arma3server')
+		username = config_file.get('STEAM_CREDENTIALS', 'username')
+		password = config_file.get('STEAM_CREDENTIALS', 'password')
+
+		command = steam + "/steamcmd.sh " + "+login " + username + " " + password + " +force_install_dir " + arma + " +app_update 233780 validate +quit"
+
+		subprocess.call(command, shell=True)
+
+		print("Arma 3 Server is up to date.")
+
 	elif action == "status":
-		print("server status")
+		print("TODO : server status")
 
 
 ##########################Config Management###############################
