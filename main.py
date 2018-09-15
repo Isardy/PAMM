@@ -46,9 +46,9 @@ def servermanagement( action ):
 		#print(modstring)
 
 		#TODO custom config file
-		startstring = serverpath + 'arma3server -config=server.cfg -mod=' + modstring
-
-		print(startstring)
+		startstring = serverpath + '/' + 'arma3server -config=server.cfg -mod=' + modstring
+		subprocess.call(startstring, shell=True)
+		#print(startstring)
 
 
 
