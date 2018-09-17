@@ -13,6 +13,7 @@ import requests
 from lxml import html
 import subprocess
 import signal
+import psutil
 
 
 ##########################Server Management###############################
@@ -28,7 +29,7 @@ import signal
 def servermanagement( action ):
 	if action == "stop":
 		process = "arma3server"
-		process = subprocess.Popen(["pgrep", process], stdout=suprocess.PIPE)
+		process = subprocess.Popen(["pgrep", process], stdout=subprocess.PIPE)
 		for pid in process.stdout:
 			os.kill(int(pid), signal.SIGTERM)
 		print("Server stopped.")
@@ -38,16 +39,15 @@ def servermanagement( action ):
 		serverpath = config_file.get('PATHS', 'arma3server')
 		modsdir = config_file.get('PATHS', 'mods')
 		modlist = mods('quietlist')
-		#subprocess.call('/home/steam/arma/arma3server', shell=True)
-		modstring = ''
+		modstring = '"'
 		for mod in modlist:
-			modstring = modstring + modsdir + '/' + mod + ','
-		modstring = modstring[:-1]
+			modstring = modstring + modsdir + '/' + mod + ';'
+		modstring = modstring[:-1] + '"'
 		#print(modstring)
-		#TODO custom config file
+		#TODO custom config file name
 		startstring = serverpath + '/' + 'arma3server -config=server.cfg -mod=' + modstring
-		#subprocess.call(startstring, shell=True)
 		print(startstring)
+		subprocess.call(startstring, shell=True)
 	elif action == "update":
 		print("TODO : update server")
 		config_file = configparser.ConfigParser(delimiters=':')
@@ -56,16 +56,16 @@ def servermanagement( action ):
 		arma = config_file.get('PATHS', 'arma3server')
 		username = config_file.get('STEAM_CREDENTIALS', 'username')
 		password = config_file.get('STEAM_CREDENTIALS', 'password')
-
 		command = steam + "/steamcmd.sh " + "+login " + username + " " + password + " +force_install_dir " + arma + " +app_update 233780 validate +quit"
-
 		subprocess.call(command, shell=True)
-
 		print("Arma 3 Server is up to date.")
-
 	elif action == "status":
-		print("TODO : server status")
-
+		for pid in psutil.pids():
+			process = psutil.Process(pid)
+			if process.name()=="arma3server":
+				print("Arma 3 server running.")
+				return
+		print("Arma 3 server is down.")
 
 ##########################Config Management###############################
 #
@@ -229,21 +229,60 @@ def mods( action, modid=0 ):
 		else:
 			return
 
-def checkmodstatus( modid ):
+def checkmodupdate( modid ): #True if needs update TODO : 3 states need/doesn't need update and doesn't exist 
 	config_file = configparser.ConfigParser(delimiters=':')
 	config_file.read("manager.ini")
-	modid = str(modid)
-	modinfo = config_file.get('MODS', modid)
+	arma3path = config_file.get('PATHS', 'arma3server')
+	modpath = config_file.get('PATHS', 'mods')
+	modpath = arma3path + "/" + modpath + "/" + modid
+	if os.path.isfile(modpath):
+		if config_file.get('MODS', modid).split(',')[1] == getmodinfo(modid):
+			return False
+		else:
+			return True
+	else:
+		return True
 
-
+def listupdates():
+	print("Checking workshop for updates...")
+	config_file = configparser.ConfigParser(delimiters=':')
+	config_file.read("manager.ini")
+	updatelist = []
+	updatecounter = 0
+	modcounter = 0
+	for mod in config_file.options('MODS'):
+		if checkmodupdate(mod):
+			updatelist.append(mod)
+			updatecounter += 1
+			modcounter += 1
+		else:
+			modcounter += 1
+	summary = str(updatecounter) + "/" + str(modcounter) + " mods need an update :"
+	print(summary)
+	for mod in updatelist:
+		print(mod)
 
 def updatemods():
 	print("Update")
-
-
-
-
-
+	config_file = configparser.ConfigParser(delimiters=':')
+	config_file.read("manager.ini")
+	for mod in config_file.options('MODS'):
+		print("Checking update availability for " + config_file.get('MODS', modid).split(',')[0])
+		if checkmodupdate(mod):
+			print("Update available. Updating mod...")
+			steam = config_file.get('PATHS', 'steamcmd')
+			arma = config_file.get('PATHS', 'arma3server')
+			mods = config_file.get('PATHS', 'mods')
+			username = config_file.get('STEAM_CREDENTIALS', 'username')
+			password = config_file.get('STEAM_CREDENTIALS', 'password')
+			command = steam + "/steamcmd.sh " + "+login " + username + " " + password + "+force_install_dir " + arma3server + "/" + mods + " +workshop_download_item 107410 " + mod + "+quit"
+			mods('add', mod)
+			realpath = arma + "/" + mods + "/steamapps/workshop/content/107410/" + mod
+			sympath = arma + "/" + mods + "/" + mod
+			os.symlink(realpath, sympath)
+			print("Mod updated.")
+		else:
+			print("Mod up to date.")
 
 ##############################Main Menu###################################
 
@@ -259,18 +298,19 @@ def menu():
 	print("3	Start Server")
 	print("4	Stop Server")
 	print("5	Update Server")
+	print("6	Server Status")
 	print()
 	print("Mods Management :")
-	print("6	List Mods")
-	print("7	Add Mods")
-	print("8	Remove Mods")
-	print("9	Check Mods for Updates")
-	print("10	Update Mods")
+	print("7	List Mods")
+	print("8	Add Mods")
+	print("9	Remove Mods")
+	print("10	Check Mods for Updates")
+	print("11	Update Mods")
 	print()
 	print("0	Abort")
 	print()
 
-	choice = input('Enter your choice [0-10] : ')
+	choice = input('Enter your choice [0-11] : ')
 	choice = int(choice)
 	if choice == 1:
 		setconfig('steamcmd')
@@ -280,29 +320,23 @@ def menu():
 		setconfig('username')
 		setconfig('password')
 	elif choice == 3:
-		print()
-		#Start Server
 		servermanagement( "start" )
 	elif choice == 4:
-		#Stop Server
 		servermanagement( "stop" )
 	elif choice == 5:
-		#Update Server
 		servermanagement( "update" )
 	elif choice == 6:
-		mods('list')
-		#List Mods
+		servermanagement( "status")
 	elif choice == 7:
-		mods( 'add' )
-		#Add Mods
+		mods('list')
 	elif choice == 8:
-		mods('remove' )
+		mods( 'add' )
 	elif choice == 9:
-		print()
-		#Check Mods for Update
+		mods('remove' )
 	elif choice == 10:
-		print()
-		#Update Mods
+		listupdates()
+	elif choice == 11:
+		updatemods()
 	elif choice == 0:
 		return
 	else:
