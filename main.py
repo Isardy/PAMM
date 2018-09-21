@@ -200,7 +200,8 @@ def mods( action, modid=0 ):
 	elif action == "quietlist":
 		return config_file.options('MODS')
 	elif action == "add":
-		modid = input("Enter mod Workshop id :")
+		if modid==0:
+			modid = input("Enter mod Workshop id :")
 		mod = getmodinfo(modid)
 		id = str(mod[0])
 		title = str(mod[1])
@@ -208,6 +209,7 @@ def mods( action, modid=0 ):
 		value = title + ',' + date 
 		config_file.set('MODS', id, value )
 		config_file.write(open('manager.ini', 'w'))
+		'''
 		more = input("Do you want to add more mods [yes/no] ?")
 		while more not in [ 'yes', 'Yes', 'no', 'No', 'y', 'n', 'Y', 'N']:
 			print("Invalid answer.")
@@ -216,6 +218,7 @@ def mods( action, modid=0 ):
 			mods( 'add' )
 		else:
 			return
+		'''
 	elif action == "remove":
 		modid = input("Enter mod Workshop id :")
 		config_file.remove_option('MODS', str(modid))
@@ -267,19 +270,23 @@ def updatemods():
 	config_file = configparser.ConfigParser(delimiters=':')
 	config_file.read("manager.ini")
 	for mod in config_file.options('MODS'):
-		print("Checking update availability for " + config_file.get('MODS', modid).split(',')[0])
+		print("Checking update availability for " + config_file.get('MODS', mod).split(',')[0])
 		if checkmodupdate(mod):
 			print("Update available. Updating mod...")
 			steam = config_file.get('PATHS', 'steamcmd')
 			arma = config_file.get('PATHS', 'arma3server')
-			mods = config_file.get('PATHS', 'mods')
+			modspath = config_file.get('PATHS', 'mods')
 			username = config_file.get('STEAM_CREDENTIALS', 'username')
 			password = config_file.get('STEAM_CREDENTIALS', 'password')
-			command = steam + "/steamcmd.sh " + "+login " + username + " " + password + "+force_install_dir " + arma3server + "/" + mods + " +workshop_download_item 107410 " + mod + "+quit"
+			print(password)
+			command = steam + "/steamcmd.sh " + "+login " + username + " " + password + " +force_install_dir " + arma + "/" + modspath + " +workshop_download_item 107410 " + mod + " +quit"
+			#command = steam + "/steamcmd.sh " + "+login anonymous +force_install_dir " + arma + "/" + modspath + " +workshop_download_item 107410 " + mod + " +quit"
+			subprocess.call(command, shell=True)
 			mods('add', mod)
-			realpath = arma + "/" + mods + "/steamapps/workshop/content/107410/" + mod
-			sympath = arma + "/" + mods + "/" + mod
-			os.symlink(realpath, sympath)
+			realpath = arma + "/" + modspath + "/steamapps/workshop/content/107410/" + mod
+			sympath = arma + "/" + modspath + "/" + mod
+			if not os.path.isfile(sympath):
+				os.symlink(realpath, sympath)
 			print("Mod updated.")
 		else:
 			print("Mod up to date.")
