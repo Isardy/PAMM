@@ -285,6 +285,8 @@ def updatemods():
 			command = steam + "/steamcmd.sh " + "+login " + username + " " + password + " +force_install_dir " + arma + "/" + modspath + " +workshop_download_item 107410 " + mod + " +quit"
 			#command = steam + "/steamcmd.sh " + "+login anonymous +force_install_dir " + arma + "/" + modspath + " +workshop_download_item 107410 " + mod + " +quit"
 			subprocess.call(command, shell=True)
+			lowerize = "find " + arma + "/" + modspath + r" -depth -exec rename 's/(.*)\/([^\/]*)/$1\/\L$2/' {} \;"
+			subprocess.call(lowerize, shell=True)
 			mods('add', mod)
 			realpath = arma + "/" + modspath + "/steamapps/workshop/content/107410/" + mod
 			sympath = arma + "/" + modspath + "/" + mod
