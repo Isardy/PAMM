@@ -186,7 +186,10 @@ def getmodinfo( modid ):
 	#print(page)
 	last_update = tree.xpath('//div[@class="detailsStatRight"]/text()')
 	title = tree.xpath('//div[@class="workshopItemTitle"]/text()')
+	if len(last_update)==2:
+		last_update.append("1 Jan @ 8:00am")	#placeholder for the case where a mod has never been updated
 	modinfo = [modid, title[0], last_update[2]]
+
 	return modinfo
 
 def mods( action, modid=0 ):
