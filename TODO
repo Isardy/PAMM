@@ -1,3 +1,5 @@
 TODO :
 
 check if -mod can take absolute paths.     -> relative only
+
+add profile system in order to be able to run several mod packs
