@@ -14,6 +14,7 @@ from lxml import html
 import subprocess
 import signal
 import psutil
+import shutil
 
 ##########################Server Management###############################
 
@@ -178,6 +179,12 @@ def mods( action, modid=0 ):
 		modid = input("Enter mod Workshop id :")
 		config_file.remove_option('MODS', str(modid))
 		config_file.write(open('manager.ini', 'w'))
+		arma3path = config_file.get('PATHS', 'arma3server')
+		modspath = config_file.get('PATHS', 'mods')
+		realpath = arma3path + "/" + modspath + "/steamapps/workshop/content/107410/" + str(modid)
+		sympath = arma3path + "/" + modspath + "/" + str(modid)	
+		shutil.rmtree(realpath)
+		os.unlink(sympath)
 		more = input("Do you want to remove more mods [yes/no] ?")
 		while more not in [ 'yes', 'Yes', 'no', 'No', 'y', 'n', 'Y', 'N']:
 			print("Invalid answer.")
