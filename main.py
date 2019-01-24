@@ -24,8 +24,9 @@ def servermanagement( action ):
 		process = subprocess.Popen(["pgrep", process], stdout=subprocess.PIPE)
 		for pid in process.stdout:
 			os.kill(int(pid), signal.SIGTERM)
-		print("Server stopped.")
+		input("Server stopped.")
 	elif action == "start":
+		print("Starting Arma 3 server.")
 		config_file = configparser.ConfigParser(delimiters=':')
 		config_file.read("manager.ini")
 		serverpath = config_file.get('PATHS', 'arma3server')
@@ -35,9 +36,9 @@ def servermanagement( action ):
 		for mod in modlist:
 			modstring = modstring + modsdir + '/' + mod + ';'
 		modstring = modstring[:-1] + '"'
-		startstring = serverpath + '/' + 'arma3server -config=server.cfg -mod=' + modstring
-		print(startstring)
-		subprocess.call(startstring, shell=True)
+		startstring = serverpath + '/' + 'arma3server -config=server.cfg -mod=' + modstring + " >>server.rpt 2>&1 &"
+		subprocess.call(startstring, shell=True, stdout=subprocess.PIPE)
+		input("Arma 3 server started.")
 	elif action == "update":
 		print("TODO : update server")
 		config_file = configparser.ConfigParser(delimiters=':')
@@ -53,9 +54,9 @@ def servermanagement( action ):
 		for pid in psutil.pids():
 			process = psutil.Process(pid)
 			if process.name()=="arma3server":
-				print("Arma 3 server running.")
+				input("Arma 3 server is running.")
 				return
-		print("Arma 3 server is down.")
+		input("Arma 3 server is down.")
 
 ##########################Config Management###############################
 
@@ -77,7 +78,7 @@ def generateconfigfile():
 	str = input("Enter your steam password :")
 	config_file.set('STEAM_CREDENTIALS','password', str)
 	config_file.write(open('manager.ini', 'w+'))
-	print("Configuration file 'manager.ini' has been created.")
+	input("Configuration file 'manager.ini' has been created.")
 
 def checkconfigfile():
 	config_file = configparser.ConfigParser(delimiters=':')
@@ -172,19 +173,24 @@ def mods( action, modid=0 ):
 			print("Invalid answer.")
 			more = input("Do you want to add more mods [yes/no] ?")
 		if more in ['yes', 'Yes', 'y']:
-			mods( 'add' )
+			mods( 'addSeveral' )
 		else:
 			return
 	elif action == "remove":
 		modid = input("Enter mod Workshop id :")
 		config_file.remove_option('MODS', str(modid))
 		config_file.write(open('manager.ini', 'w'))
+
+		#os.unlink(sym)
+		#shutil.rmtree(modpath)
 		arma3path = config_file.get('PATHS', 'arma3server')
 		modspath = config_file.get('PATHS', 'mods')
 		realpath = arma3path + "/" + modspath + "/steamapps/workshop/content/107410/" + str(modid)
 		sympath = arma3path + "/" + modspath + "/" + str(modid)	
 		shutil.rmtree(realpath)
 		os.unlink(sympath)
+
+
 		more = input("Do you want to remove more mods [yes/no] ?")
 		while more not in [ 'yes', 'Yes', 'no', 'No', 'y', 'n', 'Y', 'N']:
 			print("Invalid answer.")
@@ -245,17 +251,49 @@ def updatemods():
 			username = config_file.get('STEAM_CREDENTIALS', 'username')
 			password = config_file.get('STEAM_CREDENTIALS', 'password')
 			command = steam + "/steamcmd.sh " + "+login " + username + " " + password + " +force_install_dir " + arma + "/" + modspath + " +workshop_download_item 107410 " + mod + " +quit"
-			subprocess.call(command, shell=True)
-			lowerize = "find " + arma + "/" + modspath + r" -depth -exec rename 's/(.*)\/([^\/]*)/$1\/\L$2/' {} \;"
-			subprocess.call(lowerize, shell=True)
+			subprocess.call(command, shell=True, stdout=subprocess.PIPE)
 			mods('add', mod)
 			realpath = arma + "/" + modspath + "/steamapps/workshop/content/107410/" + mod
 			sympath = arma + "/" + modspath + "/" + mod
 			if not os.path.islink(sympath):
 				os.symlink(realpath, sympath)
+			print("Converting mod file names to Lowercase. This operation may take some time.")
+			lowerize = "find " + arma + "/" + modspath + "/" + mod + r" -depth -exec rename 's/(.*)\/([^\/]*)/$1\/\L$2/' {} \;"
+			subprocess.call(lowerize, shell=True)
 			print("Mod updated.")
 		else:
 			print("Mod up to date.")
+
+def forceupdateall():
+	print("Forcing update for all mods")
+	config_file = configparser.ConfigParser(delimiters=':')
+	config_file.read("manager.ini")
+	steam = config_file.get('PATHS', 'steamcmd')
+	arma = config_file.get('PATHS', 'arma3server')
+	modspath = config_file.get('PATHS', 'mods')
+	username = config_file.get('STEAM_CREDENTIALS', 'username')
+	password = config_file.get('STEAM_CREDENTIALS', 'password')
+	nbMod = 0
+	modCounter = 0
+	for mod in config_file.options('MODS'):
+		nbMod += 1 
+	print("Updating " + str(nbMod) + " mods.")
+	for mod in config_file.options('MODS'):
+		modCounter += 1
+		modTitle = config_file.get('MODS', mod).split(',')[0]
+		print("Updating " + modTitle + " (" + str(modCounter) + "/" + str(nbMod) +")" )
+		command = steam + "/steamcmd.sh " + "+login " + username + " " + password + " +force_install_dir " + arma + "/" + modspath + " +workshop_download_item 107410 " + mod + " +quit"
+		subprocess.call(command, shell=True, stdout=subprocess.PIPE)
+		mods('add', mod)
+		realpath = arma + "/" + modspath + "/steamapps/workshop/content/107410/" + mod
+		sympath = arma + "/" + modspath + "/" + mod
+		if not os.path.islink(sympath):
+			os.symlink(realpath, sympath)
+		print(modTitle + " updated.")
+	print("Converting mod file names to Lowercase. This operation may take some time.")
+	lowerize = "find " + arma + "/" + modspath + r" -depth -exec rename 's/(.*)\/([^\/]*)/$1\/\L$2/' {} \;"
+	subprocess.call(lowerize, shell=True)
+	print("All mods have been updated.")
 
 ##############################Main Menu###################################
 
@@ -279,12 +317,17 @@ def menu():
 	print("9	Remove Mods")
 	print("10	Check Mods for Updates")
 	print("11	Update Mods")
+	print("12	Force update Mods")
 	print()
 	print("0	Abort")
 	print()
 
-	choice = input('Enter your choice [0-11] : ')
-	choice = int(choice)
+	while True:
+		try:
+			choice = int(input('Enter your choice [0-12] : '))
+			break
+		except :
+			print("Invalid input. Try again.")
 	if choice == 1:
 		setconfig('steamcmd')
 		setconfig('arma3server')
@@ -310,6 +353,8 @@ def menu():
 		listupdates()
 	elif choice == 11:
 		updatemods()
+	elif choice == 12:
+		forceupdateall()
 	elif choice == 0:
 		return
 	else:
