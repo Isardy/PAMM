@@ -6,16 +6,19 @@ Requirements :
 	Python 3
 	pip 3
 
-	Python packages : (TODO install bash script)
+	Python packages : 
 		configparser
 		lxml
 		psutil
+		subprocess
+		shutil
+		signal
 
 Usage :
 
 The manager should work no matter where the files are placed but I recommend having them in the main Arma3Server directory.
 
-$>python3 manager.py
+$>./manager.py
 
 On first use or if the manager.ini file doesn't exist, the script will prompt you for the basic information it need in order to work. There is no verification so make sure it's right when you enter it.
 
