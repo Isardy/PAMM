@@ -37,8 +37,8 @@ def servermanagement( action ):
 			modstring = modstring + modsdir + '/' + mod + ';'
 		modstring = modstring[:-1] + '"'
 		startstring = serverpath + '/' + 'arma3server -config=server.cfg -mod=' + modstring + " >>server.rpt 2>&1 &"
-		#subprocess.call(startstring, shell=True, stdout=subprocess.PIPE)
-		print(startstring)
+		subprocess.call(startstring, shell=True, stdout=subprocess.PIPE)
+		#print(startstring)
 		input("Arma 3 server started.")
 	elif action == "update":
 		config_file = configparser.ConfigParser(delimiters=':')
