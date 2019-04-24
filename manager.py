@@ -37,7 +37,8 @@ def servermanagement( action ):
 			modstring = modstring + modsdir + '/' + mod + ';'
 		modstring = modstring[:-1] + '"'
 		startstring = serverpath + '/' + 'arma3server -config=server.cfg -mod=' + modstring + " >>server.rpt 2>&1 &"
-		subprocess.call(startstring, shell=True, stdout=subprocess.PIPE)
+		#subprocess.call(startstring, shell=True, stdout=subprocess.PIPE)
+		print(startstring)
 		input("Arma 3 server started.")
 	elif action == "update":
 		config_file = configparser.ConfigParser(delimiters=':')
@@ -66,6 +67,7 @@ def generateconfigfile():
 	config_file.add_section('PATHS')
 	config_file.add_section('STEAM_CREDENTIALS')
 	config_file.add_section('MODS')
+	config_file.add_section('NON_WORKSHOP_MODS')
 	str = input("Enter path to steamcmd directory (exemple : \033[1;41m/home/user/steamcmd\033[1;m) :")
 	config_file.set('PATHS','steamcmd', str)
 	str = input("Enter path to arma 3 server directory (exemple : \033[1;41m/home/user/arma3\033[1;m) :")
@@ -142,11 +144,16 @@ def mods( action, modid=0 ):
 	if action == "list":
 		print("Liste des mods :")
 		modlist = config_file.items('MODS')
+		nwmodlist = config_file.items('NON_WORKSHOP_MODS')
 		for mod in modlist:
+			print(mod)
+		for mod in nwmodlist:
 			print(mod)
 		input("Press 'Enter' to go back to the Menu.")
 	elif action == "quietlist":
-		return config_file.options('MODS')
+		wmods = config_file.options('MODS')
+		nwmods = config_file.options('NON_WORKSHOP_MODS')
+		return wmods + nwmods
 	elif action == "add":
 		if modid==0:
 			modid = input("Enter mod Workshop id :")
@@ -175,6 +182,12 @@ def mods( action, modid=0 ):
 			mods( 'addSeveral' )
 		else:
 			return
+	elif action == 'addNonWorkshop':
+		title = input("Mod title : (ex : Star Wars Opposition) ")
+		directory = input("Mod directory in lowercase : (ex: @swop) ")
+		config_file.set('NON_WORKSHOP_MODS', directory, title)
+		config_file.write(open('manager.ini', 'w'))
+		return
 	elif action == "remove":
 		modid = input("Enter mod Workshop id :")
 		config_file.remove_option('MODS', str(modid))
@@ -308,10 +321,11 @@ def menu():
 	print("Mods Management :")
 	print("7	List Mods")
 	print("8	Add Mods")
-	print("9	Remove Mods")
-	print("10	Check Mods for Updates")
-	print("11	Update Mods")
-	print("12	Force update Mods")
+	print("9	Add Non-Workshop Mods")
+	print("10	Remove Mods")
+	print("11	Check Mods for Updates")
+	print("12	Update Mods")
+	print("13	Force update Mods")
 	print()
 	print("0	Abort")
 	print()
@@ -342,12 +356,14 @@ def menu():
 	elif choice == 8:
 		mods( 'addSeveral' )
 	elif choice == 9:
+		mods('addNonWorkshop')
+	elif choice == 18:
 		mods('remove' )
-	elif choice == 10:
-		listupdates()
 	elif choice == 11:
-		updatemods()
+		listupdates()
 	elif choice == 12:
+		updatemods()
+	elif choice == 13:
 		forceupdateall()
 	elif choice == 0:
 		return
