@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 from modules import server
 from modules import config
 from modules import mods
