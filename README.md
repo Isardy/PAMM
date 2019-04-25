@@ -1,4 +1,4 @@
-# Arma3ModManager
+# PAMM (Python Arma 3 Mod Manager)
 A python mod manager for Arma 3 dedicated servers, for Linux (tested on Debian 9 and Ubuntu 18.04.1 using Python 3.5.3)
 
 Requirements :
