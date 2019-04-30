@@ -87,8 +87,11 @@ def createlist( listname ):
 		config_file.read('manager.ini')
 		config_file.set('MOD_LISTS', listname, "False")
 		config_file.write(open('manager.ini', 'w+'))
+
 		return True
+
 	else:
+		
 		return False
 
 def getlists():
@@ -96,6 +99,7 @@ def getlists():
 	config_file = configparser.ConfigParser(delimiters=':')
 	config_file.read("manager.ini")
 	lists = config_file.items('MOD_LISTS')
+
 	return lists
 
 def deletelist( modlist ):
@@ -105,6 +109,8 @@ def deletelist( modlist ):
 	config_file.remove_option('MOD_LISTS', modlist)
 	config_file.write(open('manager.ini', 'w'))
 	os.remove(modlist + '.ini')
+
+	return True
 
 def selectlist( modlist ):
 
