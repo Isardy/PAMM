@@ -128,3 +128,11 @@ def getcreds(cred):
 		return config_file.get('STEAM_CREDENTIALS', cred)
 	else:
 		return False
+
+def getactivelist():
+	lists = getlists()
+	for list in lists:
+		if list[1] == 'True':
+			return list[0]
+		else:
+			return False

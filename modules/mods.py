@@ -4,6 +4,8 @@ import configparser
 import requests
 from lxml import html
 
+from module import config
+
 def getmodinfo( modid ):
 	url = "https://steamcommunity.com/sharedfiles/filedetails/?id=" + str(modid)
 	page = requests.get(url)
@@ -106,18 +108,31 @@ def downloadmod( profile, modid )
 	modspath = config.getpath('mods')
 	username = config.getcreds('username')
 	password = config.getcreds('password')
-	#TODO Function to generate streamcmd commands ?
+	#TODO Function to generate steamcmd commands ?
 	realpath = arma + "/" + modspath + "/steamapps/workshop/content/107410/" + modid
 	sympath = arma + "/" + modspath + "/" + modid
 	command = steam + "/steamcmd.sh " + "+login " + username + " " + password + " +force_install_dir " + arma3path + "/" + modspath + " +workshop_download_item 107410 " + modid + " +quit"
 	subprocess.call(command, shell=True, stdout=subprocess.PIPE)
 	if modexists(modid):
-		#TODO Lowerize command
-		lowerize = "find " + arma + "/" + modspath + "/" + mod + r" -depth -exec rename 's/(.*)\/([^\/]*)/$1\/\L$2/' {} \;"
-		subprocess.call(lowerize, shell=True)
+		lowerize(modid)
 		return True
 	else:
 		os.symlink(realpath, sympath)
-		lowerize = "find " + arma + "/" + modspath + "/" + mod + r" -depth -exec rename 's/(.*)\/([^\/]*)/$1\/\L$2/' {} \;"
+		lowerize(modid)
+		return True
+
+def lowerize (modid)
+	if modexists(modid):
+		arma3path = config.getpath('arma3server')
+		modspath = config.getpath('mods')
+		realpath = arma + "/" + modspath + "/steamapps/workshop/content/107410/" + modid +"/"
+		lowerize = "find " + realpath + r" -depth -exec rename 's/(.*)\/([^\/]*)/$1\/\L$2/' {} \;"
 		subprocess.call(lowerize, shell=True)
 		return True
+	elif modid == "all"
+		realpath = arma + "/" + modspath + "/steamapps/workshop/content/107410/"
+		lowerize = "find " + realpath + r" -depth -exec rename 's/(.*)\/([^\/]*)/$1\/\L$2/' {} \;"
+		subprocess.call(lowerize, shell=True)
+		return True
+	else:
+		return False
