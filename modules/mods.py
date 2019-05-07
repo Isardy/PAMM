@@ -4,7 +4,7 @@ import configparser
 import requests
 from lxml import html
 
-from module import config
+from modules.config import *
 
 def getmodinfo( modid ):
 	url = "https://steamcommunity.com/sharedfiles/filedetails/?id=" + str(modid)
@@ -100,7 +100,7 @@ def modexists(modid):
 	else:
 		return False
 
-def downloadmod( profile, modid )
+def downloadmod( profile, modid ):
 	config_file = configparser.ConfigParser(delimiters=':')
 	config_file.read(profile + '.ini')
 	steam = config.getpath('steamcmd')
@@ -121,7 +121,7 @@ def downloadmod( profile, modid )
 		lowerize(modid)
 		return True
 
-def lowerize (modid)
+def lowerize (modid):
 	if modexists(modid):
 		arma3path = config.getpath('arma3server')
 		modspath = config.getpath('mods')
@@ -129,7 +129,7 @@ def lowerize (modid)
 		lowerize = "find " + realpath + r" -depth -exec rename 's/(.*)\/([^\/]*)/$1\/\L$2/' {} \;"
 		subprocess.call(lowerize, shell=True)
 		return True
-	elif modid == "all"
+	elif modid == "all":
 		realpath = arma + "/" + modspath + "/steamapps/workshop/content/107410/"
 		lowerize = "find " + realpath + r" -depth -exec rename 's/(.*)\/([^\/]*)/$1\/\L$2/' {} \;"
 		subprocess.call(lowerize, shell=True)

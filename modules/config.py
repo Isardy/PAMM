@@ -6,10 +6,9 @@ def checkconfigfile():
 	config_file = configparser.ConfigParser(delimiters=':')
 	config_file = ("manager.ini")
 	if not os.path.isfile(config_file):
-		input("manager.ini not found.")
-		generateconfigfile()
+		return False
 	else:
-		input("manager.ini found.")
+		return True
 
 def generateconfigfile():
 
