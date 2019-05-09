@@ -16,9 +16,9 @@ def getstatus():
 			return False
 
 def start(profile):
-	arma3path = config.getpath('arma3server')
-	modspath = config.getpath('mods')
-	modlist = mods.listmods(profile)
+	arma3path = getpath('arma3server')
+	modspath = getpath('mods')
+	modlist = listmods(profile)
 	modstring = '"'
 	for mod in modlist:
 			modstring = modstring + modsdir + '/' + mod + ';'

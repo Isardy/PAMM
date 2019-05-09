@@ -133,5 +133,4 @@ def getactivelist():
 	for list in lists:
 		if list[1] == 'True':
 			return list[0]
-		else:
-			return False
+	return "No active profile"

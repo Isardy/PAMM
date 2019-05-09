@@ -49,8 +49,8 @@ def addworkshopmod( profile, modid ):
 def addnonworkshopmod( profile, modname, directory ):
 	config_file = configparser.ConfigParser(delimiters=':')
 	config_file.read(profile + '.ini')
-	arma3path = config.getpath('arma3server')
-	modspath = config.getpath('mods')
+	arma3path = getpath('arma3server')
+	modspath = getpath('mods')
 	path = arma3path + '/' + modspath + '/' + directory
 	if os.path.exists(path):
 		config_file.set('NON_WORKSHOP_MODS', directory, modname)
