@@ -195,7 +195,7 @@ def modsmenu():
 		else:
 			pass
 
-def modsmenuaction( action ):
+def modsmenuaction( choice ):
 	while True:
 		if choice == 1:
 			os.system('clear')
