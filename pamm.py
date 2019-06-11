@@ -320,6 +320,89 @@ def modsmenuaction( choice ):
 			else:
 				break
 
+		elif choice == 6:
+			os.system('clear')
+			activelist = getactivelist()
+			print(header)
+			print()
+			print("####Mods Management####")
+			print()
+			print("Active profile : " + activelist)
+			print()
+			print("##Adding Mods##")
+			print()
+			print("To add a mod from the steam workshop, simply enter the mod's ID (series of number at the end of the URL).")
+			print("TODO : Non workshop mods")
+			print()
+			while True :
+				mod = input("Mod to add to the list : ")
+				modinfo = getmodinfo(mod)
+				print("Adding " + modinfo[1] + " to " + activelist)
+				addworkshopmod(activelist, mod)
+				more = input("Done. Add another ? [(y)/n] ")
+				if more in ['y', 'Y', 'yes', 'Yes', '']:
+					pass
+				else:
+					break
+			break
+
+		elif choice == 7:
+			os.system('clear')
+			activelist = getactivelist()
+			print(header)
+			print()
+			print("####Mods Management####")
+			print()
+			print("Active profile : " + activelist)
+			print()
+			print("##Removing Mods##")
+			print()
+			while True :
+				mod = input("Mod to remove from the list : ")
+				modinfo = getmodinfo(mod)
+				print("Removing " + modinfo[1] + " from " + activelist)
+				addworkshopmod(activelist, mod)
+				more = input("Done. Remove another ? [(y)/n] ")
+				if more in ['y', 'Y', 'yes', 'Yes', '']:
+					pass
+				else:
+					break
+			break
+
+		elif choice == 8:
+			os.system('clear')
+			activelist = getactivelist()
+			print(header)
+			print()
+			print("####Mods Management####")
+			print()
+			print("Active profile : " + activelist)
+			print()
+			print("##Repairing Mods##")
+			print()
+			print("1	Repair a mod")
+			print("2	Repair all mods from active profile")
+			print()
+			print("0	Cancel")
+			choice = input("Your choice : ")
+			if choice == '1':
+				mod = input("ID of the mod needing repair : ")
+				downloadmod(activelist, mod)
+				lowerize(mod)
+				print("Mod repaired.")
+			elif choice == '2':
+				for mod in listmods[0]:
+					downloadmod(activelist, mod)
+					lowerize(mod)
+				print("Mods repaired.")
+			else:
+				break
+
+		if choice == 9:
+			break
+		elif choice == 0:
+			sys.exit()
+
 
 if __name__ == "__main__":
 
